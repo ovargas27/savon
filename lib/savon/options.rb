@@ -73,6 +73,11 @@ module Savon
       @options[:namespace] = namespace
     end
 
+    # Target namespace.
+    def adapter(adapter)
+      @options[:adapter] = adapter
+    end
+
     # The namespace identifer.
     def namespace_identifier(identifier)
       @options[:namespace_identifier] = identifier

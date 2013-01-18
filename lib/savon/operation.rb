@@ -9,7 +9,7 @@ module Savon
   class Operation
 
     def self.create(operation_name, wsdl, globals)
-      if wsdl.document?
+      if wsdl.document? and !globals.include?(:adapter)
         ensure_name_is_symbol! operation_name
         ensure_exists! operation_name, wsdl
       end
@@ -64,7 +64,6 @@ module Savon
 
     def build_request(builder)
       request = SOAPRequest.new(@globals).build(soap_action)
-
       request.url = endpoint
       request.body = builder.to_s
 
@@ -79,12 +78,16 @@ module Savon
       # soap_action explicitly set to something falsy
       return if @locals.include?(:soap_action) && !@locals[:soap_action]
 
-      # get the soap_action from local options
-      soap_action = @locals[:soap_action]
-      # with no local option, but a wsdl, ask it for the soap_action
-      soap_action ||= @wsdl.soap_action(@name.to_sym) if @wsdl.document?
-      # if there is no soap_action up to this point, fallback to a simple default
-      soap_action ||= Gyoku.xml_tag(@name, :key_converter => @globals[:convert_request_keys_to])
+      if @globals.include?(:adapter)
+        soap_action = "#{@globals[:adapter]}/#{@name}"
+      else
+        # get the soap_action from local options
+        soap_action = @locals[:soap_action]
+        # with no local option, but a wsdl, ask it for the soap_action
+        soap_action ||= @wsdl.soap_action(@name.to_sym) if @wsdl.document?
+        # if there is no soap_action up to this point, fallback to a simple default
+        soap_action ||= Gyoku.xml_tag(@name, :key_converter => @globals[:convert_request_keys_to])
+      end
     end
 
     def endpoint
